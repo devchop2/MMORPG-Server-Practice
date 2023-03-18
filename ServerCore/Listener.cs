@@ -13,10 +13,10 @@ namespace ServerCore
     {
         Socket _listenSocket;
         SocketAsyncEventArgs socketArgs;
-        Action<Socket> connetcionHandler;
-        public void Init(IPEndPoint endPoint, Action<Socket> _handler)
+        Func<Session> sessionFactory; 
+        public void Init(IPEndPoint endPoint, Func<Session> _handler)
         {
-            this.connetcionHandler = _handler;
+            this.sessionFactory = _handler;
             socketArgs = new SocketAsyncEventArgs();
             socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
 
@@ -47,8 +47,10 @@ namespace ServerCore
             if(args.SocketError == SocketError.Success)
             {
                 Console.WriteLine("Connect!");
-                var clientSocket = args.AcceptSocket;
-                if(clientSocket != null ) connetcionHandler?.Invoke(clientSocket);
+                Session session = sessionFactory.Invoke();
+
+                session.Start(args.AcceptSocket);
+                session.OnConnected(args.AcceptSocket.RemoteEndPoint);
             }
             else
             {
