@@ -40,6 +40,9 @@ namespace ServerCore
         static void OnConnectedClient(Socket socket)
         {
             if (socket == null) return;
+            Session session = new Session();    
+            session.Start(socket);
+
 
             byte[] recvBuffer = new byte[1024];
             int recvBytes = socket.Receive(recvBuffer);
