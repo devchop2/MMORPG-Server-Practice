@@ -13,3 +13,6 @@ C:\Users\rapho\source\repos\Server\DummyClient\obj\Debug\net6.0\refint\DummyClie
 C:\Users\rapho\source\repos\Server\DummyClient\obj\Debug\net6.0\DummyClient.pdb
 C:\Users\rapho\source\repos\Server\DummyClient\obj\Debug\net6.0\DummyClient.genruntimeconfig.cache
 C:\Users\rapho\source\repos\Server\DummyClient\obj\Debug\net6.0\ref\DummyClient.dll
+C:\Users\rapho\source\repos\Server\DummyClient\bin\Debug\net6.0\ServerCore.dll
+C:\Users\rapho\source\repos\Server\DummyClient\bin\Debug\net6.0\ServerCore.pdb
+C:\Users\rapho\source\repos\Server\DummyClient\obj\Debug\net6.0\DummyClient.csproj.CopyComplete

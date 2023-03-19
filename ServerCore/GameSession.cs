@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text;
-using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace ServerCore
 {
-    class GameSession : Session
+    public class GameSession : Session
     {
         public override void OnConnected(EndPoint endPoint)
         {
             for (int i = 0; i < 5; i++)
             {
-                byte[] sendBuff = Encoding.UTF8.GetBytes("Welcom to MMOPRG Server! " + i);
+                byte[] sendBuff = Encoding.UTF8.GetBytes($"Welcom to MMOPRG Server! {i}\n");
                 Send(sendBuff);
             }
 
@@ -27,10 +22,11 @@ namespace ServerCore
             Console.WriteLine("OnDisconnected :"+endPoint);
         }
 
-        public override void OnRecv(ArraySegment<byte> buffer)
+        public override int OnRecv(ArraySegment<byte> buffer)
         {
             string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-            Console.WriteLine("[From Client]" + recvData);
+            Console.WriteLine($"[From Client] {recvData}\n");
+            return buffer.Count;
         }
 
         public override void OnSend(int numOfBytes)
