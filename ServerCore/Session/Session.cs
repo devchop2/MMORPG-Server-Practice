@@ -11,7 +11,7 @@ namespace ServerCore
         SocketAsyncEventArgs recvArgs = new SocketAsyncEventArgs();
 
         SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs();
-        Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
         List<ArraySegment<byte>> pendingList = new List<ArraySegment<byte>>();
 
         object pendingLock = new object();
@@ -36,7 +36,7 @@ namespace ServerCore
             RegisterRecv();
         }
 
-        public void Send(byte[] sendBuff)
+        public void Send(ArraySegment<byte> sendBuff)
         {
             //한번에 하나만 호출되도록 보장
             lock (pendingLock)
@@ -54,8 +54,8 @@ namespace ServerCore
             //queue 안에 있는 모든 byte[] 를 넣음. 
             while(_sendQueue.Count > 0)
             {
-                byte[] buff = _sendQueue.Dequeue();
-                pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+                ArraySegment<byte> buff = _sendQueue.Dequeue();
+                pendingList.Add(buff);
             }
 
             sendArgs.BufferList = pendingList;
