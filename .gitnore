@@ -1,1 +1,8 @@
 .vs/
+.vscode/
+bin/
+*.suo
+*.user
+*.log
+*.cache
+
