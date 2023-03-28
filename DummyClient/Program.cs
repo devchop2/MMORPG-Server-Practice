@@ -16,7 +16,7 @@ namespace DummyClient
 
             //서버에게 연결을 시도. 
             Connector connector = new Connector();
-            connector.Connect(endPoint, () => { return new GameSession(); });
+            connector.Connect(endPoint, () => { return new ServerSession(); });
             
             while (true)
             {
