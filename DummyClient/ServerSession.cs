@@ -5,11 +5,14 @@ using System.Text;
 
 namespace DummyClient
 {
-    public class Packet
+    public abstract class Packet
     {
         public ushort size;
         public int packetId;
 
+        public abstract ArraySegment<byte> Serialize();
+        public abstract void Deserialize(ArraySegment<byte> data);
+       
     }
 
     public enum PacketID 
@@ -17,17 +20,40 @@ namespace DummyClient
         PlayerInfoReq = 1,
         PlayerInfoOk = 2 
     }
+
     class PlayerInfoReq : Packet
     {
         public long playerId;
-    }
 
-    class PlayerInfoOk : Packet
-    {
-        public int hp;
-        public int attack;
-    }
+        public PlayerInfoReq()
+        {
+            packetId = (ushort)PacketID.PlayerInfoReq;
+        }
 
+        public override ArraySegment<byte> Serialize()
+        {
+            ArraySegment<byte> s = SendBufferHelper.Open(4096);
+
+            ushort count = 0;
+            bool success = true;
+
+            count += sizeof(ushort); //size
+
+            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), packetId);
+            count += sizeof(ushort);
+            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), playerId);
+            count += sizeof(long);
+
+            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count - count), count);
+            //패킷사이즈를 계산해서 마지막에 넣어줌. 대신, 첫번째 위치에 넣어줘야함.
+
+            return  SendBufferHelper.Close(count);
+        }
+        public override void Deserialize(ArraySegment<byte> data)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public class ServerSession : Session
     {
@@ -35,27 +61,11 @@ namespace DummyClient
         {
             Console.WriteLine("On Connected :"+endPoint);
 
-            PlayerInfoReq testPacket = new PlayerInfoReq() { size = 12, packetId = (ushort)PacketID.PlayerInfoReq, playerId = 1001 };
+            PlayerInfoReq testPacket = new PlayerInfoReq() {packetId = (ushort)PacketID.PlayerInfoReq, playerId = 1001 };
+            var sendBuff = testPacket.Serialize();
 
-            ArraySegment<byte> s = SendBufferHelper.Open(4096);
-
-            ushort count = 0;
-            bool success = true;
-            
-            count += sizeof(ushort); //size
-
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), testPacket.packetId);
-            count += sizeof(ushort);
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), testPacket.playerId);
-            count += sizeof(long);
-
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count - count), count); 
-            //패킷사이즈를 계산해서 마지막에 넣어줌. 대신, 첫번째 위치에 넣어줘야함.
-
-            ArraySegment<byte> sendBuff = SendBufferHelper.Close(count);
-            var sendStr = BitConverter.ToString(sendBuff.Array, sendBuff.Offset, sendBuff.Count);
-            
-            Console.WriteLine("Send:"+sendStr);
+            //var sendStr = BitConverter.ToString(sendBuff.Array, sendBuff.Offset, sendBuff.Count); 
+            //Console.WriteLine("Send:"+sendStr);
 
             Send(sendBuff);
         }

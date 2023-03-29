@@ -5,4 +5,5 @@ bin/
 *.user
 *.log
 *.cache
-
+*/bin/
+*/obj/
