@@ -9,6 +9,7 @@ namespace DummyClient
     {
         static void Main(string[] args)
         {
+            Thread.Sleep(1000);
             string host = Dns.GetHostName(); // get host name;
             IPHostEntry ipHost = Dns.GetHostEntry(host);
             IPAddress ipAddr = ipHost.AddressList[0]; //ip address : 부하분산을 위해 여러개의 ip가 생성될 수 있음. 우선 첫번 째 꺼를 사용함. 
@@ -17,7 +18,7 @@ namespace DummyClient
             //서버에게 연결을 시도. 
             Connector connector = new Connector();
             connector.Connect(endPoint, () => { return new ServerSession(); });
-            
+
             while (true)
             {
                 Thread.Sleep(1000);

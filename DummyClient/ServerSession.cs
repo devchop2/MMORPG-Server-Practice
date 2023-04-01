@@ -26,9 +26,43 @@ namespace DummyClient
         public long playerId;
         public string name; //가변길
 
+        public List<SkillInfo> skills = new List<SkillInfo>();
+
+        public struct SkillInfo
+        {
+            public int skillId;
+            public short level;
+            public float duration;
+
+            public bool Serialize(Span<byte> s, ref ushort count)
+            {
+                bool success = true;
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), skillId);
+                count += sizeof(int);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), level);
+                count += sizeof(short);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), duration);
+                count += sizeof(float);
+
+                return success;
+            }
+
+            public void Deserialize(ReadOnlySpan<byte> s, ref ushort count)
+            {
+                skillId = BitConverter.ToInt32(s.Slice(count, s.Length - count));
+                count += sizeof(int);
+                level = BitConverter.ToInt16(s.Slice(count, s.Length - count));
+                count += sizeof(short);
+                duration = BitConverter.ToSingle(s.Slice(count, s.Length - count));
+                count += sizeof(float);
+            }
+        }
+
         public PlayerInfoReq()
         {
             packetId = (ushort)PacketID.PlayerInfoReq;
+            name = "";
+
         }
 
         public override ArraySegment<byte> Serialize()
@@ -66,6 +100,15 @@ namespace DummyClient
             count += nameLen;
 
 
+            //send List
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)skills.Count);
+            count += sizeof(ushort);
+            Console.WriteLine((ushort)skills.Count);
+            foreach (var item in skills)
+            {
+                success &= item.Serialize(s, ref count);
+            }
+
             //write size
             success &= BitConverter.TryWriteBytes(s, count);
 
@@ -92,10 +135,24 @@ namespace DummyClient
 
             //read string
             ushort nameLen = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));
-
             count += sizeof(ushort);
             name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
             Console.WriteLine($"[PlayerName] {name}");
+
+            //read list
+
+            skills.Clear();
+            ushort skillLen = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));
+            count += sizeof(ushort);
+
+            for (int i = 0; i < skillLen; i++)
+            {
+                var skillInfo = new SkillInfo();
+                skillInfo.Deserialize(s, ref count);
+                skills.Add(skillInfo);
+            }
+
+
         }
     }
 
@@ -106,6 +163,9 @@ namespace DummyClient
             Console.WriteLine("On Connected :" + endPoint);
 
             PlayerInfoReq testPacket = new PlayerInfoReq() { playerId = 1001, name = "devchop2" };
+            testPacket.skills.Add(new PlayerInfoReq.SkillInfo() { skillId = 1, level = 1, duration = 0.5f });
+            testPacket.skills.Add(new PlayerInfoReq.SkillInfo() { skillId = 2, level = 10, duration = 3.5f });
+
             var sendBuff = testPacket.Serialize();
 
             if (sendBuff != null) Send(sendBuff);

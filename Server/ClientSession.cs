@@ -25,9 +25,44 @@ namespace Server
         public long playerId;
         public string name; //가변길
 
+        List<SkillInfo> skills = new List<SkillInfo>();
+
+        public struct SkillInfo
+        {
+            public int skillId;
+            public short level;
+            public float duration;
+
+            public bool Serialize(Span<byte> s, ref ushort count)
+            {
+                bool success = true;
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), skillId);
+                count += sizeof(int);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), level);
+                count += sizeof(short);
+                success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), duration);
+                count += sizeof(float);
+
+                return success;
+            }
+
+            public void Deserialize(ReadOnlySpan<byte> s, ref ushort count)
+            {
+
+                skillId = BitConverter.ToInt32(s.Slice(count, s.Length - count));
+                count += sizeof(int);
+                level = BitConverter.ToInt16(s.Slice(count, s.Length - count));
+                count += sizeof(short);
+                duration = BitConverter.ToSingle(s.Slice(count, s.Length - count));
+                count += sizeof(float);
+            }
+        }
+
         public PlayerInfoReq()
         {
             packetId = (ushort)PacketID.PlayerInfoReq;
+            name = "";
+
         }
 
         public override ArraySegment<byte> Serialize()
@@ -46,19 +81,39 @@ namespace Server
             count += sizeof(long);
 
             //send string [size][data]
+
+            /* version 1
             ushort nameLen = (ushort)Encoding.Unicode.GetByteCount(name);
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
             count += sizeof(ushort);
 
             Array.Copy(Encoding.Unicode.GetBytes(name), 0, segment.Array, count, nameLen);
             count += nameLen;
+            */
 
+
+            //version 2.
+            ushort nameLen = (ushort)Encoding.Unicode.GetBytes(name, 0, name.Length, segment.Array, segment.Offset + count + sizeof(ushort)); //spacing size  Position
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+
+            count += sizeof(ushort);
+            count += nameLen;
+
+
+            //send List
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)skills.Count);
+            count += sizeof(ushort);
+
+            foreach (var item in skills)
+            {
+                success &= item.Serialize(s, ref count);
+            }
             //write size
             success &= BitConverter.TryWriteBytes(s, count);
 
             // 클라이언트가 그짓말할거라는거 생각해야 함 
             //패킷사이즈를 계산해서 마지막에 넣어줌. 대신, 첫번째 위치에 넣어줘야함.
-
+            if (!success) return null;
             return SendBufferHelper.Close(count);
         }
 
@@ -79,10 +134,31 @@ namespace Server
 
             //read string
             ushort nameLen = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));
-
             count += sizeof(ushort);
+
             name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
+            count += nameLen;
+            //read list
+
+            skills.Clear();
+            ushort skillLen = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));
+            count += sizeof(ushort);
+
+            Console.WriteLine("SkillLen:" + skillLen);
+
+            for (int i = 0; i < skillLen; i++)
+            {
+                var skillInfo = new SkillInfo();
+                skillInfo.Deserialize(s, ref count);
+                skills.Add(skillInfo);
+            }
+
+
             Console.WriteLine($"[PlayerName] {name}");
+            foreach (var item in skills)
+            {
+                Console.WriteLine($"skill({item.skillId})({item.level})({item.duration}) :" + item.skillId);
+            }
         }
     }
 
