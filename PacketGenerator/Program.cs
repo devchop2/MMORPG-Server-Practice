@@ -13,6 +13,12 @@ namespace PacketGenerator
 
         public static void Main(string[] args)
         {
+
+            string PDLPath = "../PDL.xml";
+
+            if (args.Length >= 1) PDLPath = args[0];
+
+            Console.WriteLine("Path:" + PDLPath);
             XmlReaderSettings settings = new XmlReaderSettings()
             {
                 IgnoreComments = true,
@@ -20,7 +26,7 @@ namespace PacketGenerator
             };
 
 
-            using (XmlReader r = XmlReader.Create("PDL.xml", settings))
+            using (XmlReader r = XmlReader.Create(PDLPath, settings))
             {
                 packetEnums = "";
                 genPackets = "";
@@ -32,7 +38,6 @@ namespace PacketGenerator
                     if (r.Depth == 1 && r.NodeType == XmlNodeType.Element)
                     {
                         ParsePacket(r);
-
                     }
                 }
 
@@ -54,7 +59,14 @@ namespace PacketGenerator
 
             //{0} : class Name {1}: members {2} Serialize {3}Deserialize
             genPackets += string.Format(PacketFormat.packetFormat, packetName, members.Item1, members.Item2, members.Item3);
+
+            if (!string.IsNullOrEmpty(packetEnums)) packetEnums += "\n";
+            packetEnums += string.Format(PacketFormat.PacketIDForamt, packetName, packetId);
+
+
             packetId++;
+
+
         }
 
 
@@ -88,6 +100,12 @@ namespace PacketGenerator
                 string memberType = r.Name.ToLower();
                 switch (memberType)
                 {
+                    case "sbyte":
+                    case "byte":
+                        memberStr.AppendFormat(PacketFormat.memberFormat, memberType, memberName);
+                        serializeStr.AppendFormat(PacketFormat.serializeByteFormat, memberName);
+                        deserializeStr.AppendFormat(PacketFormat.deserializeByteFormat, memberName);
+                        break;
                     case "bool":
                     case "short":
                     case "ushort":
@@ -145,8 +163,6 @@ namespace PacketGenerator
 
             serializeStr.AppendFormat(PacketFormat.serializeListFormat, variableName);
             deserializeStr.AppendFormat(PacketFormat.deserializelistFormat, variableName, structName);
-
-
 
 
             return new Tuple<string, string, string>(memStr.ToString(), serializeStr.ToString(), deserializeStr.ToString());

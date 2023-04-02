@@ -3,6 +3,7 @@
 	<packet name="PlayerInfoReq">
 		<long name="playerId" />
 		<string name="name" />
+		<byte name="testByte" />
 		<list name="skill">
 			<int name="id" />
 			<short name="level" />

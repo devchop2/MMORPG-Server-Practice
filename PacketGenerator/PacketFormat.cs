@@ -4,7 +4,7 @@ namespace PacketGenerator
     public class PacketFormat
     {
 
-        #region File Fomat
+        #region File Format
         //{0}PacketID format {1}packet Body
         public static string fileFormat =
 @"
@@ -23,17 +23,16 @@ public enum PacketID
 
         //{0} packetName {1}packet Number 
         public static string PacketIDForamt =
-@"
-    {0} = {1},
-";
+@"{0} = {1},";
         #endregion
 
 
         #region Packet Format
         //{0} : class Name {1}: members {2} Serialize {3}Deserialize
         public static string packetFormat =
-@" 
- class {0}  
+@"
+
+public class {0}  
 {{
     {1}
     public ArraySegment<byte> Serialize()
@@ -112,6 +111,13 @@ public enum PacketID
         count += sizeof({2});
 ";
 
+        //{0} memberName  
+        public static string deserializeByteFormat =
+@"
+        this.{0} = (byte)data.Array[data.Offset + count];
+        count += sizeof(byte);
+";
+
         //{0} memberName 
         public static string deserializeStringFormat =
 @"
@@ -143,6 +149,13 @@ public enum PacketID
 @"
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), {0});
         count += sizeof({1});
+";
+
+        //{0}memberName
+        public static string serializeByteFormat =
+@"
+        segment[segment.Offset + count] = (byte)this.{0};
+        count += sizeof(byte);
 ";
         //{0}memberName 
         public static string serializeStringFormat =
