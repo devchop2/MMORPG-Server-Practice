@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <PDL>
-	<packet name="PlayerInfoReq">
+	<packet name="C_PlayerInfoReq">
 		<long name="playerId" />
 		<string name="name" />
 		<byte name="testByte" />

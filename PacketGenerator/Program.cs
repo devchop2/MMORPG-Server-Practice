@@ -9,6 +9,8 @@ namespace PacketGenerator
 
         static string packetEnums;
         static string genPackets;
+        static string clientManagerStr;
+        static string serverManagerStr;
         static ushort packetId;
 
         public static void Main(string[] args)
@@ -41,8 +43,13 @@ namespace PacketGenerator
                     }
                 }
 
-                var str = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
-                File.WriteAllText("GenPackets.cs", str);
+                var genPacketStr = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
+                File.WriteAllText("GenPackets.cs", genPacketStr);
+
+                var clientMgr = string.Format(PacketFormat.managerFileFormat, clientManagerStr);
+                File.WriteAllText("ClientPacketManager.cs", clientMgr);
+                var serverMgr = string.Format(PacketFormat.managerFileFormat, serverManagerStr);
+                File.WriteAllText("ServerPacketManager.cs", serverMgr);
             }
         }
 
@@ -63,6 +70,10 @@ namespace PacketGenerator
             if (!string.IsNullOrEmpty(packetEnums)) packetEnums += "\n";
             packetEnums += string.Format(PacketFormat.PacketIDForamt, packetName, packetId);
 
+            if (packetName.StartsWith("C_") || packetName.StartsWith("c_"))
+                serverManagerStr += string.Format(PacketFormat.managerRegisterFormat, packetName);
+            else if (packetName.StartsWith("S_") || packetName.StartsWith("s_"))
+                clientManagerStr += string.Format(PacketFormat.managerRegisterFormat, packetName);
 
             packetId++;
 
@@ -126,7 +137,6 @@ namespace PacketGenerator
                         var listMem = ParseList(r);
                         if (listMem == null) return null;
                         memberStr.Append(listMem.Item1);
-                        Console.WriteLine(listMem.Item1);
                         serializeStr.Append(listMem.Item2);
                         deserializeStr.Append(listMem.Item3);
                         break;
@@ -158,7 +168,6 @@ namespace PacketGenerator
 
             memStr.AppendFormat(PacketFormat.listMemberFormat, structName, variableName);
 
-            Console.WriteLine(memStr);
             memStr.AppendFormat(PacketFormat.structFormat, structName, variableName, members.Item1, members.Item2, members.Item3);
 
             serializeStr.AppendFormat(PacketFormat.serializeListFormat, variableName);

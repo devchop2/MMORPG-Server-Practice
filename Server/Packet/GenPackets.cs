@@ -1,4 +1,4 @@
-﻿
+
 using ServerCore;
 using System;
 using System.Net;
@@ -6,54 +6,65 @@ using System.Text;
 
 public enum PacketID
 {
-    PlayerInfoReq = 1,
+    C_PlayerInfoReq = 1,
+}
+
+public interface IPacket
+{
+    ushort Protocol { get; }
+    void Deserialize(ArraySegment<byte> data);
+    ArraySegment<byte> Serialize();
 }
 
 
 
-public class PlayerInfoReq
+public class C_PlayerInfoReq : IPacket
 {
     public long playerId;
-    public string name;
-    public List<Skill> skills = new List<Skill>();
+	public string name;
+	public byte testByte;
+	public List<Skill> skills = new List<Skill>();
     public struct Skill
     {
         public int id;
-        public short level;
-        public float duration;
-
-
+	public short level;
+	public float duration;
+	
+            
         public bool Serialize(Span<byte> s, ref ushort count)
         {
             bool success = true;
+            
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), id);
+        count += sizeof(int);
 
-            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), id);
-            count += sizeof(int);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), level);
+        count += sizeof(short);
 
-            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), level);
-            count += sizeof(short);
-
-            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), duration);
-            count += sizeof(float);
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), duration);
+        count += sizeof(float);
 
             return success;
         }
 
         public void Deserialize(ReadOnlySpan<byte> s, ref ushort count)
         {
+            
+        this.id = BitConverter.ToInt32(s.Slice(count, s.Length - count));  
+        count += sizeof(int);
 
-            this.id = BitConverter.ToInt32(s.Slice(count, s.Length - count));
-            count += sizeof(int);
+        this.level = BitConverter.ToInt16(s.Slice(count, s.Length - count));  
+        count += sizeof(short);
 
-            this.level = BitConverter.ToInt16(s.Slice(count, s.Length - count));
-            count += sizeof(short);
-
-            this.duration = BitConverter.ToSingle(s.Slice(count, s.Length - count));
-            count += sizeof(float);
+        this.duration = BitConverter.ToSingle(s.Slice(count, s.Length - count));  
+        count += sizeof(float);
 
         }
     }
 
+	
+
+    public ushort Protocol => (ushort)PacketID.C_PlayerInfoReq;
 
     public ArraySegment<byte> Serialize()
     {
@@ -66,23 +77,26 @@ public class PlayerInfoReq
 
         count += sizeof(ushort); //size
 
-        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq); ;
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID. C_PlayerInfoReq); ;
         count += sizeof(ushort);
-
+        
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), playerId);
         count += sizeof(long);
 
-        ushort nameLen = (ushort)Encoding.Unicode.GetBytes(name, 0, name.Length, segment.Array, segment.Offset + count + sizeof(ushort));
-        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+        ushort nameLen = (ushort)Encoding.Unicode.GetBytes(name, 0, name.Length, segment.Array, segment.Offset + count + sizeof(ushort)); 
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);  
         count += sizeof(ushort);
         count += nameLen;
+
+        segment[segment.Offset + count] = (byte)this.testByte;
+        count += sizeof(byte);
 
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)this.skills.Count);
         count += sizeof(ushort);
         foreach (var item in this.skills) success &= item.Serialize(s, ref count);
 
         success &= BitConverter.TryWriteBytes(s, count);
-
+ 
         if (!success) return null;
         return SendBufferHelper.Close(count);
 
@@ -96,14 +110,17 @@ public class PlayerInfoReq
 
         count += sizeof(ushort);
         count += sizeof(ushort);
-
-        this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count));
+        
+        this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count));  
         count += sizeof(long);
 
         ushort nameLen = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));
         count += sizeof(ushort);
         name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
         count += nameLen;
+
+        this.testByte = (byte)data.Array[data.Offset + count];
+        count += sizeof(byte);
 
         this.skills.Clear();
         ushort skillLen = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));

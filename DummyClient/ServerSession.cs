@@ -12,9 +12,9 @@ namespace DummyClient
         {
             Console.WriteLine("On Connected :" + endPoint);
 
-            PlayerInfoReq testPacket = new PlayerInfoReq() { playerId = 1001, name = "devchop2" };
-            testPacket.skills.Add(new PlayerInfoReq.Skill() { id = 1, level = 1, duration = 0.5f });
-            testPacket.skills.Add(new PlayerInfoReq.Skill() { id = 2, level = 10, duration = 3.5f });
+            C_PlayerInfoReq testPacket = new C_PlayerInfoReq() { playerId = 1001, name = "devchop2" };
+            testPacket.skills.Add(new C_PlayerInfoReq.Skill() { id = 1, level = 1, duration = 0.5f });
+            testPacket.skills.Add(new C_PlayerInfoReq.Skill() { id = 2, level = 10, duration = 3.5f });
 
             var sendBuff = testPacket.Serialize();
 

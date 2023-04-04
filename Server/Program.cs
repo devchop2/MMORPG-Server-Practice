@@ -8,6 +8,7 @@ namespace Server
         static Listener _listener = new Listener();
         static void Main(string[] args)
         {
+            PacketManager.Instance.Register();
             try
             {
                 //문지기 정보

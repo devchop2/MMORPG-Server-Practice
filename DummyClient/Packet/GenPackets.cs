@@ -6,12 +6,19 @@ using System.Text;
 
 public enum PacketID
 {
-    PlayerInfoReq = 1,
+    C_PlayerInfoReq = 1,
+}
+
+public interface IPacket
+{
+    ushort Protocol { get; }
+    void Deserialize(ArraySegment<byte> data);
+    ArraySegment<byte> Serialize();
 }
 
 
 
-public class PlayerInfoReq  
+public class C_PlayerInfoReq : IPacket
 {
     public long playerId;
 	public string name;
@@ -56,6 +63,9 @@ public class PlayerInfoReq
     }
 
 	
+
+    public ushort Protocol => (ushort)PacketID.C_PlayerInfoReq;
+
     public ArraySegment<byte> Serialize()
     {
 
@@ -67,7 +77,7 @@ public class PlayerInfoReq
 
         count += sizeof(ushort); //size
 
-        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID. PlayerInfoReq); ;
+        success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID. C_PlayerInfoReq); ;
         count += sizeof(ushort);
         
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), playerId);
