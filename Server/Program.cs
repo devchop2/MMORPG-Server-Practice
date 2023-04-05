@@ -6,9 +6,10 @@ namespace Server
     public class Program
     {
         static Listener _listener = new Listener();
+        public static GameRoom room = new GameRoom();
+
         static void Main(string[] args)
         {
-            PacketManager.Instance.Register();
             try
             {
                 //문지기 정보
@@ -18,7 +19,7 @@ namespace Server
                 IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777); // 7777: port number
 
                 //문지기 교육(초기화) => 작업은 Listener.cs 가 알아서해줌. 소켓연결되면 GameSession으로 만들어서 Start()까지 자동으로해줌.
-                _listener.Init(endPoint, () => { return new ClientSession(); });
+                _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
                 _listener.RegisterAccept();
 
                 while (true)

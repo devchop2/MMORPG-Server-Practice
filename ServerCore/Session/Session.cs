@@ -25,12 +25,12 @@ namespace ServerCore
         public abstract void OnDisconnected(EndPoint endPoint);
         public abstract int OnRecv(ArraySegment<byte> buffer);
         public abstract void OnSend(int numOfBytes);
-        
+
         #endregion
         public void Start(Socket socket)
         {
             _socket = socket;
-            
+
             recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
             sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
             RegisterRecv();
@@ -42,41 +42,50 @@ namespace ServerCore
             lock (pendingLock)
             {
                 _sendQueue.Enqueue(sendBuff);
-                if (pendingList.Count == 0) RegisterSend();  
+                if (pendingList.Count == 0) RegisterSend();
                 //아직 전송작업이 진행되고있지 않으면 바로 전송을 Regist > pendingList = 0 이라는것은 현재 작업중인 리스트가 없다는것.
-                
+
             }
         }
 
 
         void RegisterSend()
         {
+            if (_disconnected == 1) return;
             //queue 안에 있는 모든 byte[] 를 넣음. 
-            while(_sendQueue.Count > 0)
+            while (_sendQueue.Count > 0)
             {
                 ArraySegment<byte> buff = _sendQueue.Dequeue();
                 pendingList.Add(buff);
             }
 
-            sendArgs.BufferList = pendingList;
-                
-            bool pending = _socket.SendAsync(sendArgs);
-            if (!pending) OnSendCompleted(null, sendArgs);
+            try
+            {
+                sendArgs.BufferList = pendingList;
+
+                bool pending = _socket.SendAsync(sendArgs);
+                if (!pending) OnSendCompleted(null, sendArgs);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("register send exception occurred." + e.Message);
+            }
+
         }
 
-       void OnSendCompleted(object sender, SocketAsyncEventArgs args)
+        void OnSendCompleted(object sender, SocketAsyncEventArgs args)
         {
 
             lock (pendingLock)
             {
-                
+
                 int sendBytes = args.BytesTransferred;
                 if (sendBytes > 0 && args.SocketError == SocketError.Success)
                 {
                     sendArgs.BufferList = null;
                     pendingList.Clear();
 
-                    
+
                     OnSend(sendBytes);
                     if (_sendQueue.Count > 0) RegisterSend();
                 }
@@ -86,25 +95,36 @@ namespace ServerCore
                     Disconnect();
                 }
             }
-           
+
         }
 
         #region Network 
         void RegisterRecv()
         {
+            if (_disconnected == 1) return;
+
+
             //현재 유효한 범위를 지정해줌.
             _recvBuffer.Clean();  //혹시 index가 범위를 넘어가지 않도록 clean
             ArraySegment<byte> writeSegment = _recvBuffer.WriteSegment; //쓰기 가능한 공간 추출
             recvArgs.SetBuffer(writeSegment.Array, writeSegment.Offset, writeSegment.Count);
-            
-            bool pending = _socket.ReceiveAsync(recvArgs);
-            if (!pending) OnRecvCompleted(null, recvArgs);
+
+            try
+            {
+                bool pending = _socket.ReceiveAsync(recvArgs);
+                if (!pending) OnRecvCompleted(null, recvArgs);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Register Recv exception. " + e.Message);
+            }
+
         }
 
         void OnRecvCompleted(object sender, SocketAsyncEventArgs args)
         {
             int recvBytes = args.BytesTransferred;
-            if(recvBytes >0 && args.SocketError == SocketError.Success) 
+            if (recvBytes > 0 && args.SocketError == SocketError.Success)
             {
                 try
                 {
@@ -118,7 +138,7 @@ namespace ServerCore
 
                     //데이터가 조립되지않아서  처리하지않았을경우 0 반환. 아닐경우 처리한 데이터 반환.
                     int ProcessLen = OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, recvBytes));
-                    if(ProcessLen <0 || _recvBuffer.DataSize < ProcessLen) //예외.
+                    if (ProcessLen < 0 || _recvBuffer.DataSize < ProcessLen) //예외.
                     {
                         Disconnect();
                         return;
@@ -153,7 +173,20 @@ namespace ServerCore
             OnDisconnected(_socket.RemoteEndPoint);
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
+            Clear();
         }
+
         #endregion
+
+        void Clear()
+        {
+            lock (pendingLock)
+            {
+                _sendQueue.Clear();
+                pendingList.Clear();
+            }
+
+        }
+
     }
 }

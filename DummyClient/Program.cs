@@ -17,11 +17,12 @@ namespace DummyClient
 
             //서버에게 연결을 시도. 
             Connector connector = new Connector();
-            connector.Connect(endPoint, () => { return new ServerSession(); });
+            connector.Connect(endPoint, () => { return SessionManager.Instance.Generate(); }, 10);
 
             while (true)
             {
-                Thread.Sleep(1000);
+                SessionManager.Instance.SendForEach();
+                Thread.Sleep(250);
             }
 
         }

@@ -22,23 +22,20 @@ using ServerCore;
 public class PacketManager
 {{
 
+    static PacketManager _instance = new PacketManager();
+    public static PacketManager Instance {{ get {{ return _instance; }} }}
+
     Dictionary<ushort, Action<Session, ArraySegment<byte>>> recvHandlers = new Dictionary<ushort, Action<Session, ArraySegment<byte>>>();
     Dictionary<ushort, Action<Session, IPacket>> handler = new Dictionary<ushort, Action<Session, IPacket>>();
 
+    public PacketManager(){{ Register(); }}
+   
     public void Register()
     {{
 {0}
     }}
 
-    static PacketManager _instance = null;
-    public static PacketManager Instance
-    {{
-        get
-        {{
-            if (_instance == null) _instance = new PacketManager();
-            return _instance;
-        }}
-    }}
+    
 
     public void OnRecvPacket(Session session, ArraySegment<byte> buffer)
     {{
@@ -201,7 +198,7 @@ public class {0} : IPacket
 @"
         ushort {0}Len = (ushort)BitConverter.ToInt16(s.Slice(count, s.Length - count));
         count += sizeof(ushort);
-        {0} = Encoding.Unicode.GetString(s.Slice(count, nameLen));
+        {0} = Encoding.Unicode.GetString(s.Slice(count, {0}Len));
         count += {0}Len;
 ";
         //{0}variableName, {1}structName

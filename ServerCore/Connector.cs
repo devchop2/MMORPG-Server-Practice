@@ -8,20 +8,23 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    public  class Connector
+    public class Connector
     {
         Func<Session> sessionFactory;
-        public void Connect(IPEndPoint endPoint, Func<Session> handler)
+        public void Connect(IPEndPoint endPoint, Func<Session> handler, int count = 1)
         {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            for (int i = 0; i < count; i++)
+            {
+                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            sessionFactory = handler;
-            SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-            args.UserToken = socket;
-            args.RemoteEndPoint = endPoint;
-            args.Completed += OnConnectCompleted;
+                sessionFactory = handler;
+                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+                args.UserToken = socket;
+                args.RemoteEndPoint = endPoint;
+                args.Completed += OnConnectCompleted;
 
-            RegisterConnect(args);
+                RegisterConnect(args);
+            }
         }
 
         void RegisterConnect(SocketAsyncEventArgs args)
@@ -36,7 +39,7 @@ namespace ServerCore
 
         void OnConnectCompleted(object sender, SocketAsyncEventArgs args)
         {
-            if(args.SocketError == SocketError.Success)
+            if (args.SocketError == SocketError.Success)
             {
                 Session session = sessionFactory.Invoke();
                 session.Start(args.ConnectSocket);
@@ -44,7 +47,7 @@ namespace ServerCore
             }
             else
             {
-                Console.WriteLine("OnConnect Fail "+args.SocketError.ToString());
+                Console.WriteLine("OnConnect Fail " + args.SocketError.ToString());
             }
         }
     }

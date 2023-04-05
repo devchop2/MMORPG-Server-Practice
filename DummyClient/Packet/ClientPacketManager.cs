@@ -6,23 +6,23 @@ using ServerCore;
 public class PacketManager
 {
 
+    static PacketManager _instance = new PacketManager();
+    public static PacketManager Instance { get { return _instance; } }
+
     Dictionary<ushort, Action<Session, ArraySegment<byte>>> recvHandlers = new Dictionary<ushort, Action<Session, ArraySegment<byte>>>();
     Dictionary<ushort, Action<Session, IPacket>> handler = new Dictionary<ushort, Action<Session, IPacket>>();
 
+    public PacketManager(){ Register(); }
+   
     public void Register()
     {
 
+        recvHandlers.Add((ushort)PacketID.S_Chat, MakePacket<S_Chat>);
+        handler.Add((ushort)PacketID.S_Chat, PacketHandler.S_ChatHandler);
+
     }
 
-    static PacketManager _instance = null;
-    public static PacketManager Instance
-    {
-        get
-        {
-            if (_instance == null) _instance = new PacketManager();
-            return _instance;
-        }
-    }
+    
 
     public void OnRecvPacket(Session session, ArraySegment<byte> buffer)
     {
