@@ -11,7 +11,10 @@ public class PacketHandler
 
         if (clientSession.gameRoom == null) return;
         chat.chat += "I am " + clientSession.sessionId;
-        clientSession.gameRoom.BroadCast(clientSession, chat.chat);
+
+        var room = clientSession.gameRoom;
+        if (room != null) room.Push(() => room.BroadCast(clientSession, chat.chat));
+
         //Console.WriteLine($"[From Client]{chat.chat}");
     }
 }

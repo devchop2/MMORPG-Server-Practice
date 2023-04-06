@@ -3,27 +3,19 @@ using ServerCore;
 
 namespace Server
 {
-    public class GameRoom
+    public class GameRoom : IJobQueue
     {
         public List<ClientSession> sessions = new List<ClientSession>();
-        object lockObj = new object();
+
 
         public void Enter(ClientSession session)
         {
-            lock (lockObj)
-            {
-                sessions.Add(session);
-                session.gameRoom = this;
-            }
-
+            sessions.Add(session);
+            session.gameRoom = this;
         }
         public void Leave(ClientSession session)
         {
-            lock (lockObj)
-            {
-                sessions.Remove(session);
-            }
-
+            sessions.Remove(session);
         }
 
         public void BroadCast(ClientSession session, string chat)
@@ -35,15 +27,26 @@ namespace Server
             };
 
             ArraySegment<byte> buffer = broad.Serialize();
-            lock (lockObj)
+            foreach (var item in sessions)
             {
-                foreach (var item in sessions)
-                {
-                    item.Send(buffer);
-                }
+                item.Send(buffer);
             }
-
         }
+
+        #region Job Queue
+
+        JobQueue jobQueue = new JobQueue();
+        public void Push(Action action)
+        {
+            jobQueue.Push(action);
+        }
+
+        public Action Pop()
+        {
+            return jobQueue.Pop()
+        }
+
+        #endregion
     }
 }
 

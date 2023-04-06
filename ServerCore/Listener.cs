@@ -9,16 +9,14 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
-     public class Listener
+    public class Listener
     {
         Socket _listenSocket;
-        SocketAsyncEventArgs socketArgs;
-        Func<Session> sessionFactory; 
-        public void Init(IPEndPoint endPoint, Func<Session> _handler)
+
+        Func<Session> sessionFactory;
+        public void Init(IPEndPoint endPoint, Func<Session> _handler, int register = 10, int backlog = 100)
         {
             this.sessionFactory = _handler;
-            socketArgs = new SocketAsyncEventArgs();
-            socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
 
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             //소켓 초기화해줌.
@@ -27,10 +25,18 @@ namespace ServerCore
             //영업시작. 클라에게 요청받을 준비가 완료됨.
             //최대 10명만 받음. 사람이 몰릴 경우 11번째 부터 fail를 리턴함.
             _listenSocket.Listen(10);
-                      
+
+            for (int i = 0; i < register; i++)
+            {
+                SocketAsyncEventArgs socketArgs = new SocketAsyncEventArgs();
+                socketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
+                RegisterAccept(socketArgs);
+
+            }
+
         }
 
-        public void RegisterAccept()
+        public void RegisterAccept(SocketAsyncEventArgs socketArgs)
         {
             //socketArgs 를 초기화해줌. 재사용
             socketArgs.AcceptSocket = null;
@@ -38,13 +44,13 @@ namespace ServerCore
             //만약 클라에서 요청이 들어올 경우 accept 
             //비동기방식으로사용해야햄.. 안그럼 대기하다 멈춘다규..
             //pending == false 라면 대기없이 바로 처리되었다는 의미
-           bool pending =  _listenSocket.AcceptAsync(socketArgs);
+            bool pending = _listenSocket.AcceptAsync(socketArgs);
             if (!pending) OnAcceptCompleted(null, socketArgs);
         }
-        
+
         void OnAcceptCompleted(object sender, SocketAsyncEventArgs args)
         {
-            if(args.SocketError == SocketError.Success)
+            if (args.SocketError == SocketError.Success)
             {
                 Console.WriteLine("Connect!");
                 Session session = sessionFactory.Invoke();
@@ -54,11 +60,11 @@ namespace ServerCore
             }
             else
             {
-                Console.WriteLine("Socket Listen fail. "+args.SocketError.ToString());
+                Console.WriteLine("Socket Listen fail. " + args.SocketError.ToString());
             }
 
-            //다시 공간이 남았으니 다른 고객을 받을 준비를 함. 
-            RegisterAccept(); 
+            //다시 공간이 남았으니 다른 고객을  받을 준비를 함. 
+            RegisterAccept(args);
         }
     }
 }
