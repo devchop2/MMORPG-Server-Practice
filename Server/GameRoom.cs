@@ -7,12 +7,15 @@ namespace Server
     {
         public List<ClientSession> sessions = new List<ClientSession>();
 
+        List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>();
 
         public void Enter(ClientSession session)
         {
             sessions.Add(session);
             session.gameRoom = this;
         }
+
+
         public void Leave(ClientSession session)
         {
             sessions.Remove(session);
@@ -26,13 +29,19 @@ namespace Server
                 chat = chat,
             };
 
-            ArraySegment<byte> buffer = broad.Serialize();
-            foreach (var item in sessions)
-            {
-                item.Send(buffer);
-            }
+            _pendingList.Add(broad.Serialize());
         }
 
+
+        public void Flush()
+        {
+            foreach (var item in sessions)
+            {
+                item.Send(_pendingList);
+            }
+            Console.WriteLine("Flush called. cnt:" + _pendingList.Count);
+            _pendingList.Clear();
+        }
         #region Job Queue
 
         JobQueue jobQueue = new JobQueue();
@@ -43,7 +52,7 @@ namespace Server
 
         public Action Pop()
         {
-            return jobQueue.Pop()
+            return jobQueue.Pop();
         }
 
         #endregion

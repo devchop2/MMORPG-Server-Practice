@@ -9,17 +9,17 @@ namespace ServerCore
 
     public class SendBufferHelper
     {
-        public static ThreadLocal<SendBuffer> currentBuffer = new ThreadLocal<SendBuffer>(() =>{return null; });
-        public static int ChunkSize { get; set; } = 4096 * 100;
+        public static ThreadLocal<SendBuffer> currentBuffer = new ThreadLocal<SendBuffer>(() => { return null; });
+        public static int ChunkSize { get; set; } = 65535 * 100;
 
         public static ArraySegment<byte> Open(int reserveSize)
         {
-            if(currentBuffer.Value == null)
+            if (currentBuffer.Value == null)
             {
                 currentBuffer.Value = new SendBuffer(ChunkSize);
             }
 
-            if(currentBuffer.Value.FreeSize < reserveSize)
+            if (currentBuffer.Value.FreeSize < reserveSize)
             {
                 currentBuffer.Value = new SendBuffer(ChunkSize);
             }
@@ -39,7 +39,7 @@ namespace ServerCore
 
         public SendBuffer(int chunkSize)
         {
-            _buffers= new byte[chunkSize];
+            _buffers = new byte[chunkSize];
         }
         public int FreeSize { get { return _buffers.Length - _usedSize; } }
 

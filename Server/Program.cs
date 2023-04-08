@@ -8,6 +8,12 @@ namespace Server
         static Listener _listener = new Listener();
         public static GameRoom room = new GameRoom();
 
+        static void FlushRoom()
+        {
+            room.Push(() => room.Flush());
+            JobTimer.Instance.Push(FlushRoom, 250);
+        }
+
         static void Main(string[] args)
         {
             try
@@ -20,12 +26,12 @@ namespace Server
 
                 //문지기 교육(초기화) => 작업은 Listener.cs 가 알아서해줌. 소켓연결되면 GameSession으로 만들어서 Start()까지 자동으로해줌.
                 _listener.Init(endPoint, () => { return SessionManager.Instance.Generate(); });
-                _listener.RegisterAccept();
 
+                FlushRoom();
                 while (true)
                 {
-                    //메인스레드가 죽지 않기 위해 계속 돌아가는중....!
                     Thread.Sleep(100);
+                    JobTimer.Instance.Flush();
                 }
 
             }

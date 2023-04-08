@@ -17,7 +17,7 @@ namespace ServerCore
         object pendingLock = new object();
         int _disconnected = 0;
 
-        RecvBuffer _recvBuffer = new RecvBuffer(1024);
+        RecvBuffer _recvBuffer = new RecvBuffer(65535);
 
         #region Handlers
 
@@ -36,8 +36,21 @@ namespace ServerCore
             RegisterRecv();
         }
 
+        public void Send(List<ArraySegment<byte>> sendBuffs)
+        {
+            if (sendBuffs == null || sendBuffs.Count == 0) return;
+            lock (pendingLock)
+            {
+                foreach (var item in sendBuffs)
+                {
+                    _sendQueue.Enqueue(item);
+                }
+                if (pendingList.Count == 0) RegisterSend();
+            }
+        }
         public void Send(ArraySegment<byte> sendBuff)
         {
+            if (sendBuff == null) return;
             //한번에 하나만 호출되도록 보장
             lock (pendingLock)
             {
