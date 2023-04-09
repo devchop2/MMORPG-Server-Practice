@@ -38,6 +38,7 @@ namespace ServerCore
 
         public void Send(List<ArraySegment<byte>> sendBuffs)
         {
+            Console.WriteLine("sending" + sendBuffs.Count);
             if (sendBuffs == null || sendBuffs.Count == 0) return;
             lock (pendingLock)
             {

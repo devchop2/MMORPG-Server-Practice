@@ -1,6 +1,7 @@
 
 using System;
 using ServerCore;
+using System.Collections.Generic;
 
 
 public class PacketManager
@@ -12,8 +13,8 @@ public class PacketManager
     Dictionary<ushort, Action<Session, ArraySegment<byte>>> recvHandlers = new Dictionary<ushort, Action<Session, ArraySegment<byte>>>();
     Dictionary<ushort, Action<Session, IPacket>> handler = new Dictionary<ushort, Action<Session, IPacket>>();
 
-    public PacketManager() { Register(); }
-
+    public PacketManager(){ Register(); }
+   
     public void Register()
     {
 
@@ -22,13 +23,13 @@ public class PacketManager
 
     }
 
-
+    
 
     public void OnRecvPacket(Session session, ArraySegment<byte> buffer)
     {
         string recvData = BitConverter.ToString(buffer.Array, buffer.Offset, buffer.Count);
 
-
+        
         ushort count = 0;
         ushort size = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
         count += sizeof(ushort);

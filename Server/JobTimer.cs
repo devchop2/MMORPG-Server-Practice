@@ -40,6 +40,7 @@ namespace Server
 
                 JobTimerElem job;
 
+
                 lock (lockObj)
                 {
                     if (_queue.Count == 0)

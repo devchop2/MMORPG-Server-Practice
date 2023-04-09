@@ -11,7 +11,9 @@ namespace Server
 
         public override void OnConnected(EndPoint endPoint)
         {
-            var room = Program.room;
+            Console.WriteLine("onConnected");
+            this.gameRoom = Program.room;
+            var room = gameRoom;
             room.Push(() => room.Enter(this));
         }
 

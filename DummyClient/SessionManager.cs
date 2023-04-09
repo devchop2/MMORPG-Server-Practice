@@ -23,6 +23,7 @@ namespace DummyClient
         {
             lock (lockObj)
             {
+
                 foreach (var item in _sessions)
                 {
                     C_Chat chatting = new C_Chat()

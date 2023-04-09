@@ -35,11 +35,13 @@ namespace Server
 
         public void Flush()
         {
+            Console.WriteLine("Flush called. cnt:" + _pendingList.Count);
+
             foreach (var item in sessions)
             {
                 item.Send(_pendingList);
             }
-            Console.WriteLine("Flush called. cnt:" + _pendingList.Count);
+
             _pendingList.Clear();
         }
         #region Job Queue

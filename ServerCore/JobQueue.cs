@@ -12,11 +12,32 @@ namespace ServerCore
         Queue<Action> _jobQueue = new Queue<Action>();
         object lockObj = new object();
 
-        public void Push(Action action)
+        bool _flush = false;
+
+        public void Push(Action job)
         {
+            bool flush = false;
+
             lock (lockObj)
             {
-                _jobQueue.Enqueue(action);
+                _jobQueue.Enqueue(job);
+                if (_flush == false)
+                    flush = _flush = true;
+            }
+
+            if (flush)
+                Flush();
+        }
+
+        public void Flush()
+        {
+            while (true)
+            {
+                Action action = Pop();
+                if (action == null)
+                    return;
+
+                action.Invoke();
             }
         }
 
@@ -24,7 +45,11 @@ namespace ServerCore
         {
             lock (lockObj)
             {
-                if (_jobQueue.Count == 0) return null;
+                if (_jobQueue.Count == 0)
+                {
+                    _flush = false;
+                    return null;
+                }
                 return _jobQueue.Dequeue();
             }
         }

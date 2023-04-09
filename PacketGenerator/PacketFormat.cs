@@ -17,6 +17,7 @@ namespace PacketGenerator
 @"
 using System;
 using ServerCore;
+using System.Collections.Generic;
 
 
 public class PacketManager
