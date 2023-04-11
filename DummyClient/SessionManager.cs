@@ -28,7 +28,7 @@ namespace DummyClient
                 {
                     C_Chat chatting = new C_Chat()
                     {
-                        chat = "Hello Server",
+                        chat = "Hello Server, I'm visualStudio",
                     };
                     item.Send(chatting.Serialize());
                 }

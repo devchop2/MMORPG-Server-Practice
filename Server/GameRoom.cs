@@ -35,7 +35,7 @@ namespace Server
 
         public void Flush()
         {
-            Console.WriteLine("Flush called. cnt:" + _pendingList.Count);
+            //Console.WriteLine("Flush called. cnt:" + _pendingList.Count);
 
             foreach (var item in sessions)
             {

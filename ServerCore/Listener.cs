@@ -24,7 +24,7 @@ namespace ServerCore
 
             //영업시작. 클라에게 요청받을 준비가 완료됨.
             //최대 10명만 받음. 사람이 몰릴 경우 11번째 부터 fail를 리턴함.
-            _listenSocket.Listen(10);
+            _listenSocket.Listen(backlog);
 
             for (int i = 0; i < register; i++)
             {

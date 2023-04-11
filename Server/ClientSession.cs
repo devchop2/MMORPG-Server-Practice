@@ -4,7 +4,7 @@ using ServerCore;
 
 namespace Server
 {
-    public class ClientSession : Session
+    public class ClientSession : PacketSession
     {
         public int sessionId;
         public GameRoom gameRoom { get; set; }
@@ -28,10 +28,9 @@ namespace Server
             Console.WriteLine("OnDisconnected :" + endPoint);
         }
 
-        public override int OnRecv(ArraySegment<byte> buffer)
+        public override void OnRecvPacket(ArraySegment<byte> buffer)
         {
             PacketManager.Instance.OnRecvPacket(this, buffer);
-            return buffer.Count;
         }
 
         public override void OnSend(int numOfBytes)

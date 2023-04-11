@@ -6,7 +6,7 @@ using System.Text;
 namespace DummyClient
 {
 
-    public class ServerSession : Session
+    public class ServerSession : PacketSession
     {
         public override void OnConnected(EndPoint endPoint)
         {
@@ -18,10 +18,9 @@ namespace DummyClient
             Console.WriteLine("OnDisconnected :" + endPoint);
         }
 
-        public override int OnRecv(ArraySegment<byte> buffer)
+        public override void OnRecvPacket(ArraySegment<byte> buffer)
         {
             PacketManager.Instance.OnRecvPacket(this, buffer);
-            return buffer.Count;
         }
 
         public override void OnSend(int numOfBytes)
