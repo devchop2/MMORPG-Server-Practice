@@ -8,6 +8,7 @@ namespace DummyClient
 
         List<ServerSession> _sessions = new List<ServerSession>();
         object lockObj = new object();
+        Random _rand = new Random();
 
         public ServerSession Generate()
         {
@@ -23,14 +24,16 @@ namespace DummyClient
         {
             lock (lockObj)
             {
-
-                foreach (var item in _sessions)
+                foreach (var session in _sessions)
                 {
-                    C_Chat chatting = new C_Chat()
+                    C_Move move = new C_Move()
                     {
-                        chat = "Hello Server, I'm visualStudio",
+                        posX = _rand.Next(-50, 50),
+                        posY = 0,
+                        posZ = _rand.Next(-50, 50),
                     };
-                    item.Send(chatting.Serialize());
+
+                    session.Send(move.Serialize());
                 }
             }
         }

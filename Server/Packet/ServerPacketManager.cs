@@ -18,8 +18,11 @@ public class PacketManager
     public void Register()
     {
 
-        makeFunc.Add((ushort)PacketID.C_Chat, MakePacket<C_Chat>);
-        handler.Add((ushort)PacketID.C_Chat, PacketHandler.C_ChatHandler);
+        makeFunc.Add((ushort)PacketID.C_LeaveRoom, MakePacket<C_LeaveRoom>);
+        handler.Add((ushort)PacketID.C_LeaveRoom, PacketHandler.C_LeaveRoomHandler);
+
+        makeFunc.Add((ushort)PacketID.C_Move, MakePacket<C_Move>);
+        handler.Add((ushort)PacketID.C_Move, PacketHandler.C_MoveHandler);
 
     }
 

@@ -8,6 +8,9 @@ namespace Server
     {
         public int sessionId;
         public GameRoom gameRoom { get; set; }
+        public float posX;
+        public float posY;
+        public float posZ;
 
         public override void OnConnected(EndPoint endPoint)
         {
