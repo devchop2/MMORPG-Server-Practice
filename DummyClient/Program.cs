@@ -27,7 +27,7 @@ namespace DummyClient
 
             //서버에게 연결을 시도. 
             Connector connector = new Connector();
-            connector.Connect(endPoint, () => { return SessionManager.Instance.Generate(); }, 1);
+            connector.Connect(endPoint, () => { return SessionManager.Instance.Generate(); }, 5);
 
             while (true)
             {

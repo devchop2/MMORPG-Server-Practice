@@ -28,9 +28,9 @@ namespace DummyClient
                 {
                     C_Move move = new C_Move()
                     {
-                        posX = _rand.Next(-50, 50),
-                        posY = 0,
-                        posZ = _rand.Next(-50, 50),
+                        posX = _rand.Next(-10, 10),
+                        posY = _rand.Next(-7, 7),
+                        posZ = 0,
                     };
 
                     session.Send(move.Serialize());
